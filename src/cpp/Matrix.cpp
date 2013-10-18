@@ -23,21 +23,6 @@ Matrix::Matrix(const Matrix& mat){
 	}
 }
 
-void	Matrix::copy(Matrix& mat){
-	// Copy length
-	mN = mat.mN;
-	mM = mat.mM;
-	// Delte this array
-	freeMemory();
-	// Make new array and copy
-	allocateMemory(mN,mM);
-	for (int i = 0; i < mN; i++) {
-		for (int j = 0; j < mM; j++) {
-			mMat[i][j] = mat.mMat[i][j];
-		}
-	}
-}
-
 Matrix	Matrix::operator+(double num){
 	Matrix A = Matrix(*this);
 	for (int i = 0; i < mN; i++) {
@@ -69,8 +54,15 @@ Matrix&	Matrix::operator =(double num){
 Matrix& Matrix::operator =(Matrix other){
 	// We need to do a deep copy so we don't lose
 	// our dynamic array (pointer) in the switch;
-	copy(other);
+	swap(*this, other);
+	
 	return *this;
+}
+
+void	Matrix::swap(Matrix& m1, Matrix& m2){
+	std::swap(m1.mN  , m2.mN);
+	std::swap(m1.mM  , m2.mM);
+	std::swap(m1.mMat, m2.mMat);
 }
 
 double&	Matrix::operator()(int i, int j){
@@ -83,7 +75,7 @@ double&	Matrix::operator()(int i, int j){
 }
 
 void 	Matrix::diag(Vector& vec, int k){
-	// TODO Put in check for square matrix
+	// Tod0 Put in check for square matrix
 	int a, b;
 	int d;
 	double *arr = vec.getArrayPointer();
@@ -99,7 +91,6 @@ void 	Matrix::diag(Vector& vec, int k){
 	else if (k == 0){ // Center
 		a = 0;
 		b = 0;
-		d = d;
 	}
 	else{		  // Beneath
 		a = -k;
@@ -114,7 +105,7 @@ void 	Matrix::diag(Vector& vec, int k){
 }
 
 Vector	Matrix::diag(int k){
-	// TODO Put in check for square matrix
+	// Tod0 Put in check for square matrix
 	int d;
 	int a, b;
 	// Decide the length of the diagonal
@@ -130,7 +121,6 @@ Vector	Matrix::diag(int k){
 	else if (k == 0){ // Center
 		a = 0;
 		b = 0;
-		d = d;
 	}
 	else{		  // Beneath
 		a = -k;
@@ -149,6 +139,36 @@ Vector	Matrix::diag(int k){
 
 double** Matrix::getArrayPointer(){
 	return mMat;
+}
+Vector	Matrix::getRow(int i){
+	Vector vec   = Vector(mN);
+	double* pVec = vec.getArrayPointer();
+	for (int j = 0; j < mM; j++) {
+		pVec[j] = mMat[i][j];
+	}
+	return vec;
+}
+void	Matrix::setRow(int i, Vector& v){
+	double* pV = v.getArrayPointer();
+	for (int j = 0; j < mM; j++) {
+		mMat[i][j] = pV[j];
+	}
+}
+
+void  	Matrix::setCol(int j, Vector& v){
+	double* pV = v.getArrayPointer();
+	for (int i = 0; i < mN; i++) {
+		mMat[i][j] = pV[i];
+	}
+}
+
+Vector  Matrix::getCol(int j){
+	Vector vec   = Vector(mN);
+	double* pVec = vec.getArrayPointer();
+	for (int i = 0; i < mN; i++) {
+		pVec[i] = mMat[i][j];
+	}
+	return vec;
 }
 
 int	Matrix::getN(){
@@ -178,6 +198,19 @@ void 	Matrix::reset(){
 			mMat[i][j] = 0;
 		}
 	}
+}
+
+void	Matrix::t(){
+	// Transpose
+	// Inverted size
+	Matrix matrix = Matrix(mM,mN);
+	double** nMat = matrix.getArrayPointer();
+	for (int i = 0; i < mN; i++) {
+		for (int j = 0; j < mM; j++) {
+			nMat[j][i] = mMat[i][j];
+		}
+	}
+	swap(*this,matrix);
 }
 
 void 	Matrix::eye(){
