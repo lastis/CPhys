@@ -1,5 +1,7 @@
 #include <cmath>
 #include <iostream>
+#include <algorithm>
+#include <stdlib.h>
 #include "CPhys.h"
 
 using namespace std;
@@ -22,7 +24,7 @@ void EigVal::jacobiMethod(Matrix& A, Matrix& R, int N){
 		 && iterations < maxIterations ) {
 		
 		int num = iterations;
-		if(num%5000 == 0){
+		if(num%20000 == 0){
 			cout << "Computing - "<< iterations << " iterations ";
 			cout << " max off diag = " << maxoff << endl;
 		}
@@ -33,8 +35,67 @@ void EigVal::jacobiMethod(Matrix& A, Matrix& R, int N){
 	cout << "Number of iterations: " << iterations << "\n";
 }
 
+double VecOp::normalize(Vector& v, double dx){
+	int     N   = v.getLength();
+	double* pV  = v.getArrayPointer();
+	double  sum = 0;
+	double  Z   = 0;
+	for (int i = 0; i < N; i++) {
+		sum += pV[i]*pV[i]*dx;
+	}
+	Z = 1/sqrt(sum);
+	for (int i = 0; i < N; i++) {
+		pV[i] *= Z;
+	}
+	return Z;
+
+}
+
+void	MatOp::sortCol(Matrix& A, Vector& v){
+	// We want to sort the colums in A by the elements in v.
+	int rows = A.getN();
+	int cols = A.getM();
+	// Make a new matrix wit dim N = A.N+1 and M = A.M
+	Matrix tmp = Matrix(rows+1,cols);
+	// Insert v in the first row
+	tmp.setRow(0,v);
+	// Copy A to tmp after the first row
+	double** ppTmp = tmp.getArrayPointer();
+	double** ppA   =    A.getArrayPointer();
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			ppTmp[i+1][j] = ppA[i][j];
+		}
+	}
+	// Our matrix is row major so we need to transpose
+	// to be able to sort by columns
+	// Now **arr[0,1,2, ... , i] points to whole arrays 
+	// of the columns
+	tmp.t();
+	// Sort by first elements of A (sorting by vector v)
+	ppTmp = tmp.getArrayPointer();
+	qsort((void*)ppTmp,cols,sizeof(double),&mMatOp::compareTwoRows);
+	// Transpose back
+	tmp.t();
+	ppTmp = tmp.getArrayPointer();
+	// Now copy the sorted elements to A
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {
+			 ppA[i][j] = ppTmp[i+1][j];
+		}
+	}
+	// Then sort v
+	v.sort();
+}
+
 namespace{
-	double mEigVal::maxoffdiag(double** A, int* k, int* l, int N){
+
+	
+	int 	mMatOp::compareTwoRows(const void* rowA, const void* rowB){
+		return (**(double**) rowA - **(double**) rowB);
+	}
+
+	double 	mEigVal::maxoffdiag(double** A, int* k, int* l, int N){
 		double max  = 0.0;
 		double a_ij = 0.0;
 		for (int i = 0; i < N; i++) {
