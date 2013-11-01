@@ -4,6 +4,9 @@
 #include "Vector.h"
 
 using namespace std;
+/*
+ Daniel ble vimraped
+ */
 
 Vector::Vector(int N){
 	mN = N;

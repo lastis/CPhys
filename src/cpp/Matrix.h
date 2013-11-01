@@ -1,6 +1,7 @@
 #include "Vector.h"
 class Matrix {
 public:
+	Matrix();
 	Matrix(int N, int M);
 	Matrix(const Matrix& mat);
 	~Matrix();

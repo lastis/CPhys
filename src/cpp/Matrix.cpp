@@ -4,6 +4,12 @@
 
 using namespace std;
 
+Matrix::Matrix(){
+	mN = 0;
+	mM = 0;
+	allocateMemory(mN,mM);
+}
+
 Matrix::Matrix(int N, int M){
 	allocateMemory(N,M);
 	mN = N;
@@ -141,7 +147,7 @@ double** Matrix::getArrayPointer(){
 	return mMat;
 }
 Vector	Matrix::getRow(int i){
-	Vector vec   = Vector(mN);
+	Vector vec   = Vector(mM);
 	double* pVec = vec.getArrayPointer();
 	for (int j = 0; j < mM; j++) {
 		pVec[j] = mMat[i][j];

@@ -4,8 +4,23 @@
 #include <stdlib.h>
 #include "CPhys.h"
 
+
 using namespace std;
 using namespace CPhys;
+
+void	ODE::solveEuler(Matrix&  u, Vector& 	   uInit, 
+		        double  dt, ODE_Interface*   ode){
+	// Call a more general solve method
+	using namespace mODE;
+	solve(u,uInit,dt,ode,&stepEuler);
+}
+
+void	ODE::solveRK4(Matrix&  u, Vector& 	 uInit, 
+		      double  dt, ODE_Interface*   ode){
+	// Call more general solve method
+	using namespace mODE;
+	solve(u,uInit,dt,ode,&stepRK4);
+}
 
 void EigVal::jacobiMethod(Matrix& A, Matrix& R, int N){
 	using namespace mEigVal;
@@ -35,7 +50,9 @@ void EigVal::jacobiMethod(Matrix& A, Matrix& R, int N){
 	cout << "Number of iterations: " << iterations << "\n";
 }
 
-double VecOp::normalize(Vector& v, double dx){
+
+
+double 	VecOp::normalize(Vector& v, double dx){
 	int     N   = v.getLength();
 	double* pV  = v.getArrayPointer();
 	double  sum = 0;
@@ -90,7 +107,96 @@ void	MatOp::sortCol(Matrix& A, Vector& v){
 
 namespace{
 
+	void	mODE::solve(Matrix&  u, Vector&        uInit,  
+			    double& dt, ODE_Interface*   ode,
+		      void (*stepFunc) (double*,double,double*       ,
+			                double&,int&  ,ODE_Interface*)){
+		// Number of equations
+		int 	 eq    = u.getM();
+		int	 N     = u.getN();
+		double** ppU   = u.getArrayPointer();
+		double*   pU   = new double[eq];
+		double*   pV    = new double[eq];
+		double*   pUOut = new double[eq];
+
+		// Insert the inital values
+		for (int i = 0; i < eq; i++) {
+			pU[i]   = uInit(i);
+			ppU[0][i] = pU[i];
+		}
+		// Start calculating with the given step function
+		for (int i = 0; i < N-1; i++) {
+			// Paramaters are;
+			// uIn, current time, vIn, uOut, dt
+			// the number of equations and the object with the
+			// derivative function. 
+			stepFunc(pU,i*dt,pUOut,dt,eq,ode);
+			// We have now calculated step i+1
+			for (int j = 0; j < eq; j++) {
+				ppU[i+1][j] = pUOut[j];
+				pU[j]     = pUOut[j];
+			}
+		}
+	}
+
+
+	void 	mODE::stepEuler(double* pU, double   t, double*        pUOut, 
+			        double& dt, int&    eq, ODE_Interface*   ode){
+		double* pV  = new double[eq];
+		// Calculate pV
+		ode->derivative(pU,t,pV);
+		for (int i = 0; i < eq; i++) {
+			pUOut[i] = pU[i] + pV[i]*dt;
+		}
+	}
 	
+	void 	mODE::stepRK4(double* pU, double   t, double* 	     pUOut, 
+			      double& dt, int&    eq, ODE_Interface*   ode){
+		double* pV  = new double[eq];
+		double* k1  = new double[eq];
+		double* k2  = new double[eq];
+		double* k3  = new double[eq];
+		double* k4  = new double[eq];
+		double* tmp = new double[eq];
+		double dt2 = dt/2;
+		// The derivative functions calculates pV
+		// Calculate k2
+		ode->derivative(pU,t,pV);
+		for (int i = 0; i < eq; i++) {
+			k1[i] = pV[i]*dt;
+		}
+		// Calculate k2
+		for (int i = 0; i < eq; i++) {
+			tmp[i] = pU[i] + 0.5*k1[i];
+		}
+		ode->derivative(tmp,t+dt2,pV);
+		for (int i = 0; i < eq; i++) {
+			k2[i] = pV[i]*dt;
+		}
+		// Calculate k3
+		for (int i = 0; i < eq; i++) {
+			tmp[i] = pU[i] + 0.5*k2[i];
+		}
+		ode->derivative(tmp,t+dt2,pV);
+		for (int i = 0; i < eq; i++) {
+			k3[i] = pV[i]*dt;
+		}
+		// Calculate k4
+		for (int i = 0; i < eq; i++) {
+			tmp[i] = pU[i] + k3[i];
+		}
+		ode->derivative(tmp,t+dt,pV);
+		for (int i = 0; i < eq; i++) {
+			k4[i] = pV[i]*dt;
+		}
+		// Calculate new value
+		for (int i = 0; i < eq; i++) {
+			pUOut[i] = pU[i] + (1/6.0)*
+				(k1[i] + 2*k2[i] + 2*k3[i] + k4[i]);
+		}
+		
+	}
+
 	int 	mMatOp::compareTwoRows(const void* rowA, const void* rowB){
 		return (**(double**) rowA - **(double**) rowB);
 	}
