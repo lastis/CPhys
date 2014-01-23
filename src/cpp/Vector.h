@@ -1,5 +1,6 @@
 class Vector {
 public:
+	Vector();
 	Vector(int  N);
 	Vector(const Vector& vec);
 	~Vector();
@@ -8,7 +9,7 @@ public:
 	void	print();
 	void	copy(Vector& vec);
 	int	getLength();
-	double	linspace (double  start, double end, int N);
+	double	linspace (double  start, double end);
 	double*	getArrayPointer();
 	Vector&	operator+=(double num);
 	Vector&	operator =(double num);

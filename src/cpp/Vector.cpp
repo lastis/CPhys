@@ -4,9 +4,11 @@
 #include "Vector.h"
 
 using namespace std;
-/*
- Daniel ble vimraped
- */
+
+Vector::Vector(){
+	mN = 0;
+	allocateMemory(mN);
+}
 
 Vector::Vector(int N){
 	mN = N;
@@ -60,7 +62,8 @@ double&	Vector::operator()(int i){
 	return num;
 }
 
-double 	Vector::linspace(double start, double end, int N){
+double 	Vector::linspace(double start, double end){
+	int N = this->getLength();
 	double delta = end - start;
 	double h  = delta/(N-1);       // step defined here
 	for (int i = 0; i < N; i++) {
