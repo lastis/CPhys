@@ -1,5 +1,17 @@
 #include "Matrix.h"
+#include "Cube.h"
+#include "Physical.h"
 namespace CPhys{
+
+	double**	matrix(int n, int m);
+
+	namespace PeriodicBounds{
+		void 	correctPos(double& x, double& L, double& move);
+		double 	getClosestDist(double& x1, double& x2, double& L);
+	}
+	namespace Lattice{
+		Matrix	getFCC(int Nc, double dist);
+	}
 	namespace LinAlg{
 		Vector	tridiagSolve(double a, double b, double c, Vector y);
 	}

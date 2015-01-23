@@ -8,6 +8,87 @@
 using namespace std;
 using namespace CPhys;
 
+double** CPhys::matrix(int N, int M){
+	/*
+    double** mat = new double*[N]; 
+	for(int i = 0; i < N; i++){
+		mat[i] = new double[M]; 
+	}
+    */
+    double **ptr1 	= new double*[N];
+	double *ptr2	= new double[N*M];
+    for(int i = 0; i < N; i++){
+		ptr1[i] = ptr2;
+        ptr2 += M;
+	}
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < M; j++) {
+			ptr1[i][j] = 0;
+		}
+	}
+	return ptr1;
+}
+
+void	PeriodicBounds::correctPos(double& x, double& L, double& move){
+	if(x > L){
+		x -= L*(int(x/L));
+        move++;
+	}
+	else if(x < 0){
+		x -= L*(int(x/L)-1);
+        move--;
+	}
+}
+
+double	PeriodicBounds::getClosestDist(double& x1, double& x2, double& L){
+	double rij = x2 - x1;
+	double lHalf = L/2;
+	if(rij > lHalf){
+		rij -= L;
+	}
+	else if(rij < -lHalf){
+		rij += L;
+	}
+	return rij;
+}
+
+Matrix	Lattice::getFCC(int Nc, double b){
+	// NOTES:
+	// Nc cannot be less than 1
+	// Counting is done by adding all atoms from all unit cells
+	// then adding the sides except the edges, then add the 
+	// edges (they overlap on the last atom)
+	int 	atoms 	= 4*Nc*Nc*Nc;
+	Matrix 	r = Matrix(atoms,3);
+	// Initiate r vector
+	int index = 0;
+	for (int k = 0; k < Nc; k++) {
+		for (int j = 0; j < Nc; j++) {
+			for (int i = 0; i < Nc; i++) {
+				r(index,0) = i*b;
+				r(index,1) = j*b;
+				r(index,2) = k*b;
+				index++;
+
+				r(index,0) = i*b + 0.5*b;
+				r(index,1) = j*b + 0.5*b;
+				r(index,2) = k*b;
+				index++;
+
+				r(index,0) = i*b;
+				r(index,1) = j*b + 0.5*b;
+				r(index,2) = k*b + 0.5*b;
+				index++;
+
+				r(index,0) = i*b + 0.5*b;
+				r(index,1) = j*b;
+				r(index,2) = k*b + 0.5*b;
+				index++;
+			}
+		}
+	}
+	return r;
+}
 
 double Random::ran0(long &seed)
 {
